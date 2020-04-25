@@ -28,18 +28,23 @@ if (open(AM_OUTPUT_FILE,'> SalesTaxCalculation_output.csv') == 0) {
 
 my $count=1;
 
-print AM_OUTPUT_FILE "REF NUMBER,VIN NUMBER,ACOUNT CLOSED DATE,SALES DATE,REPO DATE,STOCK NUMBER,CUSTOMER NAME,RETAIL SALES PRICE,TAXABLE FEES (DOC SMOG),TOTAL AMOUNT SUBJECT TO TAX,";
-print AM_OUTPUT_FILE "SALES TAX,TAX RATE,OTHER NON-TAXABLE CHARGES,TOTAL SELLING PRICE,DOWN PAYMENT,BALANCE ON CONTRACT,FINANCE CHARGES,TOTAL CONTRACT VALUE,";
+# vin, date closed, sale date, repo date, stockno, full name, tax rate, sale price,taxablefees, amtsubjecttotax,  
+# salestax,nontaxablecharges,totalsellingprice,downpayment,balanceoncontract,financecharge,totalcontractvalue  
+# cust. total paymentsrecvd,balanceonrepodate,unearnedfinancecharge, netcontractbalance,city,amtfinanced,intrcvd,latercvd
+	
+print AM_OUTPUT_FILE "VIN NUMBER,ACOUNT CLOSED DATE,SALES DATE,REPO DATE,STOCK NUMBER,CUSTOMER NAME,TAX RATE,RETAIL SALES PRICE,TAXABLE FEES (DOC SMOG),TOTAL AMOUNT SUBJECT TO TAX,";
+print AM_OUTPUT_FILE "SALES TAX,NON-TAXABLE CHARGES,TOTAL SELLING PRICE,DOWN PAYMENT,BALANCE ON CONTRACT,FINANCE CHARGES,TOTAL CONTRACT VALUE,";
 print AM_OUTPUT_FILE "PAYMENTS RECEIVED ON CONTRACT,BALANCE ON DATE OF REPO,UNEARNED FINANCE CHARGES,NET CONTRACT BALANCE,";
+print AM_OUTPUT_FILE "(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),(BREAK),CITY,(BREAK),(BREAK),AMT. FINANCED,INTEREST RECVD,LATE FEES RECVD\n";
 
-print AM_OUTPUT_FILE "TAXPAYER REPO VALUE,TAX PAYER TOTAL PRINCIPAL PAID,TAX PAYER GAP+WARRANTY REFUND, TAX PAYER PRINCIPAL PAYMENTS,WHOLESALE VALUE,";
-print AM_OUTPUT_FILE "RECONDITION COST,REPOSSESSION LOSS PER RECORDS,TAXABLE % OF LOSS,ALLOWABLE DEDUCTION,ALLOWABLE TAX CREDIT,TAX PAYER COMMENT\n";
+#print AM_OUTPUT_FILE "TAXPAYER REPO VALUE,TAX PAYER TOTAL PRINCIPAL PAID,TAX PAYER GAP+WARRANTY REFUND, TAX PAYER PRINCIPAL PAYMENTS,WHOLESALE VALUE,";
+#print AM_OUTPUT_FILE "RECONDITION COST,REPOSSESSION LOSS PER RECORDS,TAXABLE % OF LOSS,ALLOWABLE DEDUCTION,ALLOWABLE TAX CREDIT,TAX PAYER COMMENT\n";
 
 
 ## Read the AutoManager input file 
 while (<AM_INPUT_FILE>) {
  chomp;
- my($closedate,$saledate,$fullvin,$stockno,$lastname,$firstname,$saleprice,$salestax,$docfee,$smogfee,$gapwarranty,$registration,$license,$smogcert,$downpayment,$financecharge,$intrcvd,$prinrcvd,$latercvd,$totalpayments,$taxrate,$repostatus,$unwind,$year,$principalrx,$city) = split(",");
+ my($closedate,$saledate,$fullvin,$stockno,$lastname,$firstname,$saleprice,$salestax,$docfee,$smogfee,$gapwarranty,$registration,$license,$smogcert,$downpayment,$financecharge,$intrcvd,$prinrcvd,$latercvd,$totalpayments,$taxrate,$repostatus,$unwind,$year,$city,$amtfinanced) = split(",");
 
  
  
@@ -50,9 +55,9 @@ while (<AM_INPUT_FILE>) {
  my $amtsubjecttotax = sprintf("%.2f",$saleprice + $taxablefees);
  my $totalsellingprice = sprintf("%.2f",$amtsubjecttotax + $salestax + $nontaxablecharges);
  my $balanceoncontract = sprintf("%.2f",$totalsellingprice - $downpayment);
- my $totalcontratvalue = sprintf("%.2f",$balanceoncontract + $financecharge);
+ my $totalcontractvalue = sprintf("%.2f",$balanceoncontract + $financecharge);
  my $unearnedint = sprintf("%.2f",$financecharge - $intrcvd);
- my $balanceonrepodate = sprintf("%.2f", $totalcontratvalue - $paymentsrecvd);
+ my $balanceonrepodate = sprintf("%.2f", $totalcontractvalue - $paymentsrecvd);
  
 # print $count," [",$smogcert,"]", $smogfee," ",$gapwarranty," ",$registration," ",$license," = ",$nontaxablecharges,"\n"; 
 
@@ -72,11 +77,14 @@ while (<AM_INPUT_FILE>) {
  
  if ( ($unwind eq "U") || ($repostatus eq "Write Off") )
  {
-	print AM_OUTPUT_FILE $count,$COMMA,$fullvin,$COMMA,$closedate,$COMMA,$saledate,$COMMAx2,$stockno,$COMMA,$firstname," ",$lastname,$COMMA,$taxrate/100,$COMMA,$saleprice,$COMMA,$taxablefees,$COMMA,$amtsubjecttotax,$COMMA;
-	print AM_OUTPUT_FILE $salestax,$COMMA,$nontaxablecharges,$COMMA,$totalsellingprice,$COMMA,$downpayment,$COMMA,$balanceoncontract,$COMMA,$financecharge,$COMMA,$totalcontratvalue,$COMMA;
-	print AM_OUTPUT_FILE $paymentsrecvd,$COMMA,$balanceonrepodate,$COMMA,$unearnedfinancecharge,$COMMA,$netcontractbalance,$COMMA,$city,"\n";
+	# vin, date closed, sale date, repo date, stockno, full name, tax rate, sale price,taxablefees, amtsubjecttotax,  
+	print AM_OUTPUT_FILE $fullvin,$COMMA,$closedate,$COMMA,$saledate,$COMMAx2,$stockno,$COMMA,$firstname," ",$lastname,$COMMA,$taxrate/100,$COMMA,$saleprice,$COMMA,$taxablefees,$COMMA,$amtsubjecttotax,$COMMA;
+	# salestax,nontaxablecharges,totalsellingprice,downpayment,balanceoncontract,financecharge,totalcontractvalue  
+	print AM_OUTPUT_FILE $salestax,$COMMA,$nontaxablecharges,$COMMA,$totalsellingprice,$COMMA,$downpayment,$COMMA,$balanceoncontract,$COMMA,$financecharge,$COMMA,$totalcontractvalue,$COMMA;
+	# cust. total paymentsrecvd,balanceonrepodate,unearnedfinancecharge, netcontractbalance,city,amtfinanced,intrcvd,latercvd
+	print AM_OUTPUT_FILE $paymentsrecvd,$COMMA,$balanceonrepodate,$COMMA,$unearnedfinancecharge,$COMMA,$netcontractbalance,$COMMA,$COMMAx2,$COMMAx2,$COMMAx2,$COMMAx2,$COMMAx2,$COMMA,$city,$COMMA,$COMMAx2,$amtfinanced,$COMMA,$intrcvd,$COMMA,$latercvd,"\n";
 	
-	print $count++," [",$stockno,"]", $firstname," ",$lastname,"\n"; 
+	print $count++," [",$stockno,"]", $firstname," ",$lastname," ",$amtfinanced,"\n"; 
  }
   	 
  
